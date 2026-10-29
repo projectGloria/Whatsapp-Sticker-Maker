@@ -1,0 +1,11 @@
+.tools/
+.gradle/
+.kotlin/
+**/build/
+**/.cxx/
+local.properties
+*.iml
+.idea/
+deliverables/
+/backUP/
+app/src/main/cpp/libwebp/.git/

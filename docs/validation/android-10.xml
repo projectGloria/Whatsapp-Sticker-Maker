@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.stickerstudio.StudioInstrumentedTest" tests="15" failures="0" errors="0" skipped="0" time="34.054" timestamp="2026-10-29T14:44:23" hostname="localhost">
+  <properties>
+    <property name="device" value="Studio29(AVD) - 10" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="databasePersistenceVersioningReorderAndProviderWhitelist" classname="com.stickerstudio.StudioInstrumentedTest" time="0.096" />
+  <testcase name="failedReplacementKeepsSavedStickerAndMetadata" classname="com.stickerstudio.StudioInstrumentedTest" time="0.058" />
+  <testcase name="tenPackExposureLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="0.259" />
+  <testcase name="stillEditingTransparencyAndEditRoundTrip" classname="com.stickerstudio.StudioInstrumentedTest" time="0.67" />
+  <testcase name="complexAnimationRetriesCompressionToMeetSizeLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="21.636" />
+  <testcase name="animatedWebpTrimAndVideoRotation" classname="com.stickerstudio.StudioInstrumentedTest" time="1.791" />
+  <testcase name="unreadableShareIsReported" classname="com.stickerstudio.StudioInstrumentedTest" time="0.005" />
+  <testcase name="cancellationStopsFrameProcessingAndKeepsExistingAsset" classname="com.stickerstudio.StudioInstrumentedTest" time="0.056" />
+  <testcase name="gifDisposalAndAnimatedTiming" classname="com.stickerstudio.StudioInstrumentedTest" time="0.159" />
+  <testcase name="compatibleStaticAndAnimatedWebpAreBytePreserved" classname="com.stickerstudio.StudioInstrumentedTest" time="0.029" />
+  <testcase name="malformedAndUnsupportedMediaAreRejected" classname="com.stickerstudio.StudioInstrumentedTest" time="0.003" />
+  <testcase name="cropAndRotationChangeComposition" classname="com.stickerstudio.StudioInstrumentedTest" time="0.03" />
+  <testcase name="fullPackAndMixedImportFailuresKeepUnimportedFiles" classname="com.stickerstudio.StudioInstrumentedTest" time="0.339" />
+  <testcase name="mixedAndMalformedSharedFilesAreReportedIndividually" classname="com.stickerstudio.StudioUiTest" time="2.247" />
+  <testcase name="createShareEditAndReopenCollection" classname="com.stickerstudio.StudioUiTest" time="5.67" />
+</testsuite>
