@@ -19,6 +19,8 @@ object NativeWebp {
 
     external fun info(path: String): IntArray
 
+    external fun wrapStill(path: String): ByteArray
+
     external fun openDecoder(path: String): Long
 
     external fun nextFrame(handle: Long, bitmap: Bitmap): Int
@@ -60,7 +62,7 @@ object MediaEngine {
             File.createTempFile(
                 "incoming_",
                 ".media",
-                File(context.cacheDir, "imports").apply { mkdirs() },
+                File(context.filesDir, "imports").apply { mkdirs() },
             )
         try {
             context.contentResolver.openInputStream(uri)?.use { input ->
@@ -86,6 +88,7 @@ object MediaEngine {
     }
 
     fun inspect(file: File, name: String = file.name): Incoming {
+        require(file.length() in 1..MAX_INPUT) { "Input exceeds 100 MB or is empty" }
         val header = ByteArray(16)
         val n = file.inputStream().use { it.read(header) }
         require(n >= 12) { "Empty or truncated media" }
@@ -104,6 +107,7 @@ object MediaEngine {
             )
         }
         if (magic.startsWith("GIF87a") || magic.startsWith("GIF89a")) {
+            checkAnimationMemory(file, 0, 0)
             val data = file.readBytes()
             val parser = GifHeaderParser().setData(data)
             val h = parser.parseHeader()
@@ -170,14 +174,19 @@ object MediaEngine {
     }
 
     private fun checkAnimationMemory(file: File, w: Int, h: Int) {
-        require(file.length() + w.toLong() * h * 12 < Runtime.getRuntime().maxMemory() * 3 / 5) {
+        require(
+            file.length() + w.toLong() * h * 12 <
+                (Runtime.getRuntime().maxMemory() -
+                    (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) * 3 /
+                    5
+        ) {
             "Animation is too large for this phone. Resize it before importing."
         }
     }
 
     fun gifSample(w: Int, h: Int) = Integer.highestOneBit(max(1, max(w, h) / 1024))
 
-    fun firstFrame(file: File): Bitmap {
+    fun firstFrame(file: File, maxEdge: Int = 1536): Bitmap {
         val media = inspect(file)
         if (media.kind == "video") {
             val r = MediaMetadataRetriever()
@@ -191,7 +200,7 @@ object MediaEngine {
         }
         return ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, info, _ ->
             decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-            val scale = min(1f, 1536f / max(info.size.width, info.size.height))
+            val scale = min(1f, maxEdge.toFloat() / max(info.size.width, info.size.height))
             decoder.setTargetSize(
                 max(1, (info.size.width * scale).toInt()),
                 max(1, (info.size.height * scale).toInt()),
@@ -207,6 +216,27 @@ object MediaEngine {
         } finally {
             if (scaled !== bitmap) scaled.recycle()
         }
+    }
+
+    fun preserves(media: Incoming, edit: Edit): Boolean {
+        if (
+            media.kind == "video" ||
+                edit.copy(end = 10000) != Edit() ||
+                (media.animated && edit.end < media.duration)
+        )
+            return false
+        val i = runCatching { NativeWebp.info(media.file.path) }.getOrNull() ?: return false
+        return i[0] == 512 &&
+            i[1] == 512 &&
+            media.file.length() <=
+                (if (media.animated) Limits.ANIMATED_BYTES else Limits.STATIC_BYTES) &&
+            (!media.animated || i[2] in 8..10000 && i[4] >= 8)
+    }
+
+    suspend fun preview(media: Incoming, source: Bitmap, edit: Edit): Bitmap {
+        val scope = currentCoroutineContext()
+        return if (preserves(media, edit)) source.copy(Bitmap.Config.ARGB_8888, false)
+        else Renderer.render(source, edit, !media.animated) { scope.ensureActive() }
     }
 
     @Suppress("DEPRECATION")
@@ -241,10 +271,17 @@ object MediaEngine {
             }
         }
         if (!media.animated) {
-            val source = firstFrame(media.file)
+            val cropFraction =
+                min(edit.right - edit.left, edit.bottom - edit.top).coerceAtLeast(.05f)
+            val edge = min(8192, max(1536, (512 / cropFraction).toInt()))
+            require(edge.toLong() * edge * 8 < Runtime.getRuntime().maxMemory() * 3 / 5) {
+                "Crop needs too much memory. Use a wider crop."
+            }
+            val source = firstFrame(media.file, edge)
+            val currentScope = currentCoroutineContext()
             val rendered =
                 try {
-                    Renderer.render(source, edit)
+                    Renderer.render(source, edit) { currentScope.ensureActive() }
                 } finally {
                     source.recycle()
                 }
@@ -267,16 +304,17 @@ object MediaEngine {
         val start = edit.start.coerceIn(0, max(0, media.duration - 8))
         val end = min(edit.end, media.duration)
         require(end - start in 8..10000) { "Trim this animation to 10 seconds or less." }
-        val attempts = listOf(85f to 20, 65f to 15, 45f to 12, 30f to 8, 15f to 6)
-        for ((attempt, settings) in attempts.withIndex()) {
+        val attempts = AnimationEncoding.attempts
+        var attempt = 0
+        while (attempt < attempts.size) {
             currentCoroutineContext().ensureActive()
+            val settings = attempts[attempt]
             val encoder = NativeWebp.openEncoder(settings.first)
             var timestamp = if (media.kind == "video") start else 0
             var frames = 0
-            var nextSample = start
-            val step = 1000 / settings.second
+            val sampler = AnimationSampler(start, settings.second)
             try {
-                FrameSource.open(media, start).use {
+                FrameSource.open(media, start, settings.second).use {
                     while (true) {
                         currentCoroutineContext().ensureActive()
                         val frame = it.next() ?: break
@@ -284,19 +322,17 @@ object MediaEngine {
                             val frameStart = timestamp
                             timestamp = frame.second
                             if (
-                                timestamp > start &&
-                                    frameStart < end &&
-                                    (frames == 0 || frameStart >= nextSample)
+                                timestamp > start && frameStart < end && sampler.select(timestamp)
                             ) {
                                 val at = max(start, frameStart) - start
                                 val rendered = Renderer.render(frame.first, edit, false)
                                 try {
+                                    currentCoroutineContext().ensureActive()
                                     NativeWebp.addFrame(encoder, rendered, at)
                                     frames++
                                 } finally {
                                     rendered.recycle()
                                 }
-                                nextSample = max(start, frameStart) + step
                             }
                             progress(
                                 (attempt +
@@ -310,7 +346,9 @@ object MediaEngine {
                     }
                 }
                 require(frames > 0) { "No frames in selected range" }
+                currentCoroutineContext().ensureActive()
                 val bytes = NativeWebp.finish(encoder, end - start)
+                currentCoroutineContext().ensureActive()
                 if (bytes.size <= Limits.ANIMATED_BYTES) {
                     out.writeBytes(bytes)
                     val info = NativeWebp.info(out.path)
@@ -321,6 +359,8 @@ object MediaEngine {
                     progress(1f)
                     return info[2]
                 }
+                if (attempt == attempts.lastIndex) break
+                attempt = AnimationEncoding.nextAttempt(attempt, bytes.size)
             } finally {
                 NativeWebp.closeEncoder(encoder)
             }
@@ -347,13 +387,17 @@ abstract class FrameSource : AutoCloseable {
     abstract fun next(): Pair<Bitmap, Int>?
 
     companion object {
-        fun open(media: Incoming, startAt: Int = 0): FrameSource =
-            when (media.kind) {
+        fun open(media: Incoming, startAt: Int = 0, fps: Int = 20): FrameSource {
+            require(fps in 1..20)
+            return when (media.kind) {
                 "webp" ->
                     object : FrameSource() {
                         var handle = NativeWebp.openDecoder(media.file.path)
 
+                        var exhausted = false
+
                         override fun next(): Pair<Bitmap, Int>? {
+                            if (exhausted) return null
                             val b =
                                 Bitmap.createBitmap(
                                     media.width,
@@ -362,6 +406,7 @@ abstract class FrameSource : AutoCloseable {
                                 )
                             val t = NativeWebp.nextFrame(handle, b)
                             if (t < 0) {
+                                exhausted = true
                                 b.recycle()
                                 return null
                             }
@@ -415,6 +460,8 @@ abstract class FrameSource : AutoCloseable {
                         val retriever =
                             MediaMetadataRetriever().apply { setDataSource(media.file.path) }
                         var time = startAt.coerceIn(0, media.duration)
+                        val origin = time
+                        var index = 0
                         var closed = false
 
                         override fun next(): Pair<Bitmap, Int>? {
@@ -426,7 +473,13 @@ abstract class FrameSource : AutoCloseable {
                                     1024,
                                     1024,
                                 ) ?: error("Cannot decode video frame")
-                            time = min(time + 50, media.duration)
+                            index++
+                            time =
+                                min(
+                                        origin.toLong() + index.toLong() * 1000 / fps,
+                                        media.duration.toLong(),
+                                    )
+                                    .toInt()
                             return b to time
                         }
 
@@ -439,5 +492,6 @@ abstract class FrameSource : AutoCloseable {
                     }
                 else -> error("Not animated")
             }
+        }
     }
 }

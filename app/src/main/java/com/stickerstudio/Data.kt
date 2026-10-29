@@ -62,6 +62,12 @@ interface StudioDao {
 
     @Query("SELECT * FROM stickers WHERE id=:id") fun sticker(id: String): Sticker?
 
+    @Transaction
+    @Query("SELECT * FROM packs WHERE exposed=1 ORDER BY created DESC LIMIT 10")
+    fun exposedPacks(): List<PackContents>
+
+    @Query("SELECT COUNT(*) FROM packs WHERE exposed=1") fun exposedCount(): Int
+
     @Insert fun insert(pack: Pack)
 
     @Insert fun insert(sticker: Sticker)
@@ -125,12 +131,12 @@ class Repository(val context: Context) {
 
     fun notifyChange() {
         context.contentResolver.notifyChange(
-            Uri.parse("content://com.stickerstudio.stickers/metadata"),
+            Uri.parse("content://${context.packageName}.stickers/metadata"),
             null,
         )
     }
 
-    fun create(name: String, animated: Boolean): Pack {
+    fun create(name: String, animated: Boolean = false): Pack {
         require(name.trim().isNotEmpty() && name.trim().length <= 128) {
             "Use a name from 1 to 128 characters."
         }
@@ -192,7 +198,8 @@ class Repository(val context: Context) {
     }
 
     fun chooseTray(s: Sticker) {
-        val bitmap = MediaEngine.firstFrame(file(s))
+        val current = dao.sticker(s.id) ?: error("Sticker was removed")
+        val bitmap = MediaEngine.firstFrame(file(current))
         val name = "tray_${UUID.randomUUID()}.png"
         val out = File(folder(s.packId), name)
         try {
@@ -203,7 +210,9 @@ class Repository(val context: Context) {
             }
         } finally {
             bitmap.recycle()
+            if (dao.pack(s.packId)?.pack?.tray != name) out.delete()
         }
+        cleanup(s.packId)
         notifyChange()
     }
 
@@ -215,39 +224,76 @@ class Repository(val context: Context) {
             c.stickers.all {
                 file(it).isFile &&
                     file(it).length() in
-                        1..(if (c.pack.animated) Limits.ANIMATED_BYTES else Limits.STATIC_BYTES) &&
-                    (!c.pack.animated || it.duration in 8..10000)
+                        1..(if (it.duration > 0) Limits.ANIMATED_BYTES else Limits.STATIC_BYTES) &&
+                    (it.duration == 0 || it.duration in 8..10000)
             },
         )
     }
 
     fun expose(id: String) {
-        db.runInTransaction {
-            val c = dao.pack(id) ?: error("Pack was deleted")
-            require(issues(c).isEmpty()) { issues(c).joinToString("\n") }
-            c.stickers.forEach { s ->
-                val info = NativeWebp.info(file(s).path)
-                require(
-                    info[0] == 512 &&
-                        info[1] == 512 &&
-                        (info[3] != 0) == c.pack.animated &&
-                        (!c.pack.animated || info[2] in 8..10000 && info[4] >= 8)
-                ) {
-                    "A sticker does not meet WhatsApp's dimensions or animation requirements."
+        val generated = mutableListOf<File>()
+        try {
+            db.runInTransaction {
+                val c = dao.pack(id) ?: error("Pack was deleted")
+                require(issues(c).isEmpty()) { issues(c).joinToString("\n") }
+                val animated = c.stickers.any { it.duration > 0 }
+                c.stickers.forEach { s ->
+                    val output =
+                        if (animated && s.duration == 0) {
+                            File(folder(id), "${s.id}_${UUID.randomUUID()}_mixed.webp").also {
+                                generated += it
+                                it.writeBytes(NativeWebp.wrapStill(file(s).path))
+                                require(it.length() in 1..Limits.ANIMATED_BYTES) {
+                                    "Sticker exceeds 500 KB"
+                                }
+                                dao.update(s.copy(asset = it.name, duration = 1000))
+                            }
+                        } else file(s)
+                    val info = NativeWebp.info(output.path)
+                    require(
+                        info[0] == 512 &&
+                            info[1] == 512 &&
+                            (info[3] != 0) == animated &&
+                            (!animated || info[2] in 8..10000 && info[4] >= 8)
+                    ) {
+                        "A sticker does not meet WhatsApp's dimensions or animation requirements."
+                    }
                 }
+                val bounds =
+                    android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeFile(
+                    File(folder(id), c.pack.tray).path,
+                    bounds,
+                )
+                require(bounds.outWidth == 96 && bounds.outHeight == 96) {
+                    "The pack icon must be 96 × 96 pixels."
+                }
+                require(c.pack.exposed || dao.exposedCount() < 10) {
+                    "WhatsApp exposes up to 10 packs. Hide another pack first."
+                }
+                dao.update(
+                    c.pack.copy(exposed = true, animated = animated, version = c.pack.version + 1)
+                )
             }
-            val bounds =
-                android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            android.graphics.BitmapFactory.decodeFile(File(folder(id), c.pack.tray).path, bounds)
-            require(bounds.outWidth == 96 && bounds.outHeight == 96) {
-                "The pack icon must be 96 × 96 pixels."
-            }
-            require(c.pack.exposed || dao.all().count { it.pack.exposed } < 10) {
-                "WhatsApp exposes up to 10 packs. Hide another pack first."
-            }
-            dao.update(c.pack.copy(exposed = true))
+        } catch (e: Exception) {
+            generated.forEach { it.delete() }
+            throw e
         }
         notifyChange()
+    }
+
+    fun normalizePublished(id: String) {
+        val c = dao.pack(id) ?: return
+        if (c.pack.exposed) expose(id)
+    }
+
+    fun cleanup(id: String) {
+        val c = dao.pack(id) ?: return
+        val live = c.stickers.flatMap { listOf(it.asset, it.original) }.toSet() + c.pack.tray
+        File(root, id)
+            .listFiles()
+            ?.filter { it.isFile && it.name !in live }
+            ?.forEach { it.delete() }
     }
 
     fun hide(id: String) {

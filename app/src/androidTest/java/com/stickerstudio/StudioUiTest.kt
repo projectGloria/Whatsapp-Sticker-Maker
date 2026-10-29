@@ -2,6 +2,7 @@ package com.stickerstudio
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -20,7 +21,15 @@ class StudioUiTest {
 
     private fun waitFor(text: String) {
         try {
-            rule.waitUntil(20000) { rule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+            if (
+                (text == "My packs" || text == packName || text.endsWith("of 30 stickers")) &&
+                    rule.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()
+            ) {
+                rule.onNode(hasScrollToIndexAction()).performScrollToNode(hasText(text))
+            }
+            rule.waitUntil(20000) {
+                rule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+            }
         } catch (e: Throwable) {
             throw AssertionError("Waiting for: $text\n" + rule.onRoot().printToString(), e)
         }
@@ -43,6 +52,9 @@ class StudioUiTest {
     fun createShareEditAndReopenCollection() {
         waitFor("My packs")
         rule.onNodeWithContentDescription("New pack").performClick()
+        rule.onNodeWithText("Sticker type").assertDoesNotExist()
+        rule.onNodeWithText("Static", substring = false).assertDoesNotExist()
+        rule.onNodeWithText("Animated", substring = false).assertDoesNotExist()
         rule.onNodeWithText("Pack name").performTextInput(packName)
         rule.onNodeWithText("Save pack").performClick()
         waitFor("0 of 30 stickers")
@@ -55,10 +67,17 @@ class StudioUiTest {
         waitFor("Saved 1 sticker")
         rule.onNodeWithText("OK").performClick()
         waitFor("1 of 30 stickers")
+        rule
+            .onNode(hasScrollToIndexAction())
+            .performScrollToNode(hasContentDescription("Sticker 1"))
         rule.onNodeWithContentDescription("Sticker 1").performClick()
         rule.onNodeWithText("Edit sticker").performClick()
         waitFor("Photo studio")
-        rule.onNodeWithText("Text", useUnmergedTree = true).performClick()
+        rule.onNode(hasText("Text") and hasClickAction()).performSemanticsAction(
+            SemanticsActions.OnClick
+        ) {
+            it()
+        }
         rule.onNodeWithText("Sticker text").performScrollTo().performTextInput("Hello!")
         rule.onNodeWithText("Save", substring = false).performClick()
         waitFor("Sticker saved")
@@ -75,7 +94,9 @@ class StudioUiTest {
         waitFor("Some files need attention")
         rule.onNodeWithText("Got it").performClick()
         waitFor("2 files ready to preview")
+        rule.onNodeWithTag("import-list").performScrollToNode(hasText("Static image"))
         rule.onNodeWithText("Static image").assertExists()
+        rule.onNodeWithTag("import-list").performScrollToNode(hasText("Animated · 0.4s"))
         rule.onNodeWithText("Animated · 0.4s").assertExists()
         rule.onNodeWithTag("import-list").performScrollToNode(hasText("Discard imports"))
         rule.onNodeWithText("Discard imports").performClick()

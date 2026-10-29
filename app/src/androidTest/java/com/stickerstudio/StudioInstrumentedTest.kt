@@ -183,6 +183,64 @@ class StudioInstrumentedTest {
     }
 
     @Test
+    fun nativeEncoderPreservesPartialAlphaAndTransparentPixels() {
+        val bitmap = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+        val encoder = NativeWebp.openEncoder(85f)
+        val output = File(temp, "alpha.webp")
+        try {
+            bitmap.eraseColor(Color.TRANSPARENT)
+            val canvas = Canvas(bitmap)
+            canvas.drawRect(40f, 40f, 240f, 240f, Paint().apply { color = Color.argb(128, 255, 0, 0) })
+            NativeWebp.addFrame(encoder, bitmap, 0)
+            canvas.drawRect(300f, 300f, 400f, 400f, Paint().apply { color = Color.BLUE })
+            NativeWebp.addFrame(encoder, bitmap, 100)
+            output.writeBytes(NativeWebp.finish(encoder, 200))
+            val media = MediaEngine.inspect(output)
+            assertEquals(200, media.duration)
+            FrameSource.open(media).use { source ->
+                val first = source.next()!!
+                try {
+                    assertEquals(0, Color.alpha(first.first.getPixel(0, 0)))
+                    val pixel = first.first.getPixel(100, 100)
+                    assertEquals(128, Color.alpha(pixel))
+                    assertTrue(Color.red(pixel) > 230)
+                    assertEquals(0, Color.alpha(first.first.getPixel(350, 350)))
+                } finally { first.first.recycle() }
+                val second = source.next()!!
+                try {
+                    assertEquals(255, Color.alpha(second.first.getPixel(350, 350)))
+                    assertTrue(Color.blue(second.first.getPixel(350, 350)) > 230)
+                } finally { second.first.recycle() }
+            }
+        } finally {
+            NativeWebp.closeEncoder(encoder)
+            bitmap.recycle()
+        }
+    }
+
+    @Test
+    fun lowerRateVideoRetrievesOnlyRequiredFrames() {
+        val media = MediaEngine.inspect(fixture("rotated.mp4"))
+        val start = 200
+        val fps = 6
+        var count = 0
+        var previous = start
+        FrameSource.open(media, start, fps).use { source ->
+            while (true) {
+                val frame = source.next() ?: break
+                try {
+                    assertTrue(frame.second > previous)
+                    assertTrue(frame.second <= media.duration)
+                    previous = frame.second
+                    count++
+                } finally { frame.first.recycle() }
+            }
+        }
+        assertEquals(((media.duration - start) * fps + 999) / 1000, count)
+        assertEquals(media.duration, previous)
+    }
+
+    @Test
     fun malformedAndUnsupportedMediaAreRejected() {
         val bad = File(temp, "fake.png").apply { writeText("not an image but named PNG") }
         assertTrue(runCatching { MediaEngine.inspect(bad) }.isFailure)
@@ -216,7 +274,7 @@ class StudioInstrumentedTest {
         val c = pack()
         repo.expose(c.pack.id)
         val resolver = context.contentResolver
-        val base = "content://com.stickerstudio.stickers"
+        val base = "content://${context.packageName}.stickers"
         resolver.query(Uri.parse("$base/metadata/${c.pack.id}"), null, null, null, null)!!.use {
             assertEquals(1, it.count)
             it.moveToFirst()
@@ -339,9 +397,57 @@ class StudioInstrumentedTest {
         assertEquals(3, model.pending.size)
         assertEquals(3, model.errors.size)
         assertTrue(model.errors.any { it.contains("full") })
-        assertTrue(model.errors.any { it.contains("static") })
+        assertTrue(repo.dao.pack(p.id)!!.stickers.any { it.duration > 0 })
+        assertFalse(model.errors.any { it.contains("stickers only") })
         assertTrue(model.pending.all { it.media.file.exists() })
         instrumentation.runOnMainSync { model.discard() }
+    }
+
+    @Test
+    fun mixedPackImportsAndExportsWithoutChoosingAType() {
+        val initial = pack()
+        val still = initial.stickers.first()
+        val originalBytes = repo.original(still).readBytes()
+        val expected = MediaEngine.firstFrame(repo.file(still))
+        val gif = MediaEngine.inspect(fixture("disposal.gif"))
+        lateinit var model: StudioModel
+        instrumentation.runOnMainSync {
+            model = StudioModel(context.applicationContext as android.app.Application)
+            model.pending = listOf(ImportItem(gif))
+            model.saveImports(initial.pack.id)
+        }
+        waitForModel(model)
+        assertTrue(model.errors.isEmpty())
+        assertTrue(model.pending.isEmpty())
+        assertEquals(4, repo.dao.pack(initial.pack.id)!!.stickers.size)
+        repo.expose(initial.pack.id)
+        val exported = repo.dao.pack(initial.pack.id)!!
+        assertTrue(exported.pack.animated)
+        assertTrue(repo.issues(exported).isEmpty())
+        exported.stickers.forEach {
+            val info = NativeWebp.info(repo.file(it).path)
+            assertTrue(info[3] != 0)
+            assertTrue(info[2] in 8..10000)
+            assertTrue(info[4] >= 8)
+        }
+        val wrapped = exported.stickers.first { it.id == still.id }
+        assertArrayEquals(originalBytes, repo.original(wrapped).readBytes())
+        val decoder = NativeWebp.openDecoder(repo.file(wrapped).path)
+        val frame = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+        try {
+            assertEquals(500, NativeWebp.nextFrame(decoder, frame))
+            assertTrue(expected.sameAs(frame))
+            assertEquals(1000, NativeWebp.nextFrame(decoder, frame))
+            assertTrue(expected.sameAs(frame))
+            assertEquals(-1, NativeWebp.nextFrame(decoder, frame))
+        } finally {
+            NativeWebp.closeDecoder(decoder)
+            frame.recycle()
+            expected.recycle()
+        }
+        val assetBefore = wrapped.asset
+        repo.expose(initial.pack.id)
+        assertEquals(assetBefore, repo.dao.sticker(still.id)!!.asset)
     }
 
     @Test

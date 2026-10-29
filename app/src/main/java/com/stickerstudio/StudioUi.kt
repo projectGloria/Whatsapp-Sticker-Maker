@@ -56,7 +56,7 @@ fun StudioApp(model: StudioModel, export: (Pack, String) -> Unit) {
             var create by remember { mutableStateOf(false) }
             var rename by remember { mutableStateOf<Pack?>(null) }
             var delete by remember { mutableStateOf<Pack?>(null) }
-            var destination by remember { mutableStateOf<String?>(null) }
+            var destination by model::destination
             var targetChooser by remember { mutableStateOf<Pack?>(null) }
             val context = LocalContext.current
             val picker =
@@ -75,16 +75,16 @@ fun StudioApp(model: StudioModel, export: (Pack, String) -> Unit) {
                             Column {
                                 Text(
                                     if (imports) "Import studio"
-                                    else selected?.pack?.name ?: "Sticker Studio",
+                                    else
+                                        selected?.pack?.name
+                                            ?: context.getString(R.string.app_name),
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
                                     if (imports) "Preview · edit · choose a pack"
-                                    else if (selected != null)
-                                        if (selected.pack.animated) "Animated pack"
-                                        else "Static pack"
+                                    else if (selected != null) "${selected.stickers.size} stickers"
                                     else "A little more you, in every chat.",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -146,7 +146,6 @@ fun StudioApp(model: StudioModel, export: (Pack, String) -> Unit) {
                                 { picker.launch(arrayOf("image/*", "video/mp4")) },
                             ) {
                                 model.action {
-                                    model.repo.expose(selected.pack.id)
                                     val targets =
                                         listOf("com.whatsapp", "com.whatsapp.w4b").filter {
                                             packageName ->
@@ -158,6 +157,7 @@ fun StudioApp(model: StudioModel, export: (Pack, String) -> Unit) {
                                                 }
                                                 .isSuccess
                                         }
+                                    if (targets.isNotEmpty()) model.repo.expose(selected.pack.id)
                                     withContext(Dispatchers.Main) {
                                         when (targets.size) {
                                             0 ->
@@ -180,14 +180,14 @@ fun StudioApp(model: StudioModel, export: (Pack, String) -> Unit) {
                 }
             }
             if (create)
-                PackNameDialog("New pack", null, onDismiss = { create = false }) { name, animated ->
-                    model.create(name, animated) { p ->
+                PackNameDialog("New pack", null, onDismiss = { create = false }) { name ->
+                    model.create(name) { p ->
                         if (imports) destination = p.id else model.selected = p.id
                         create = false
                     }
                 }
             rename?.let { p ->
-                PackNameDialog("Rename pack", p, onDismiss = { rename = null }) { name, _ ->
+                PackNameDialog("Rename pack", p, onDismiss = { rename = null }) { name ->
                     model.action { model.repo.rename(p.id, name) }
                     rename = null
                 }
@@ -417,7 +417,7 @@ private fun PackLibrary(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        "${c.stickers.size}/30 · ${if(c.pack.animated)"Animated" else "Static"}",
+                        "${c.stickers.size}/30 stickers",
                         style = MaterialTheme.typography.labelMedium,
                     )
                     Text(
@@ -616,7 +616,7 @@ private fun ImportScreen(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                "Static and animated stickers need separate packs. Edit clips longer than 10 seconds before saving.",
+                "Add photos, GIFs and videos to the same pack. Edit clips longer than 10 seconds before saving.",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -677,7 +677,7 @@ private fun ImportScreen(
                     Column {
                         Text(c.pack.name, fontWeight = FontWeight.Medium)
                         Text(
-                            "${if(c.pack.animated)"Animated" else "Static"} · ${c.stickers.size}/30",
+                            "${c.stickers.size}/30 stickers",
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }
@@ -691,15 +691,6 @@ private fun ImportScreen(
             }
         }
         item {
-            if (chosen != null) {
-                val matching = model.pending.count { it.media.animated == chosen.pack.animated }
-                if (matching != model.pending.size)
-                    Text(
-                        "${model.pending.size-matching} files do not match this pack type. They will stay in the import list.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-            }
             Button(
                 onClick = { destination?.let { model.saveImports(it) } },
                 enabled = chosen != null && chosen.stickers.size < 30,
@@ -743,10 +734,9 @@ private fun PackNameDialog(
     title: String,
     pack: Pack?,
     onDismiss: () -> Unit,
-    onSave: (String, Boolean) -> Unit,
+    onSave: (String) -> Unit,
 ) {
     var name by remember { mutableStateOf(pack?.name ?: "") }
-    var animated by remember { mutableStateOf(pack?.animated ?: false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -759,19 +749,6 @@ private fun PackNameDialog(
                     singleLine = true,
                 )
                 if (pack == null) {
-                    Text("Sticker type", style = MaterialTheme.typography.labelLarge)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = !animated,
-                            onClick = { animated = false },
-                            label = { Text("Static") },
-                        )
-                        FilterChip(
-                            selected = animated,
-                            onClick = { animated = true },
-                            label = { Text("Animated") },
-                        )
-                    }
                     Text(
                         "You can keep a draft until it has 3 stickers.",
                         style = MaterialTheme.typography.bodySmall,
@@ -780,7 +757,7 @@ private fun PackNameDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(name, animated) }, enabled = name.isNotBlank()) {
+            TextButton(onClick = { onSave(name) }, enabled = name.isNotBlank()) {
                 Text("Save pack")
             }
         },

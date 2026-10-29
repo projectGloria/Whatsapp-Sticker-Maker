@@ -26,16 +26,9 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun EditorScreen(target: EditorTarget, onDismiss: () -> Unit, onSave: (Edit) -> Unit) {
-    var draft by
-        remember(target) {
-            mutableStateOf(
-                target.edit.copy(
-                    end = minOf(target.edit.end, target.media.duration.takeIf { it > 0 } ?: 10000)
-                )
-            )
-        }
-    val undo = remember(target) { mutableStateListOf<Edit>() }
-    val redo = remember(target) { mutableStateListOf<Edit>() }
+    var draft by target::draft
+    val undo = target.undo
+    val redo = target.redo
     var tool by remember { mutableStateOf("Crop") }
     var brush by remember { mutableFloatStateOf(36f) }
     var dark by remember { mutableStateOf(false) }
@@ -70,9 +63,7 @@ fun EditorScreen(target: EditorTarget, onDismiss: () -> Unit, onSave: (Edit) -> 
             val b = source
             if (b != null)
                 value =
-                    withContext(Dispatchers.Default) {
-                        Renderer.render(b, draft, !target.media.animated)
-                    }
+                    withContext(Dispatchers.Default) { MediaEngine.preview(target.media, b, draft) }
         }
     val current by rememberUpdatedState(draft)
     Dialog(
@@ -414,34 +405,37 @@ private fun AnimationPlayback(media: Incoming, edit: Edit, modifier: Modifier) {
         produceState<Bitmap?>(null, media.file, edit) {
             try {
                 while (true) {
-                    val source = withContext(Dispatchers.IO) { FrameSource.open(media, edit.start) }
-                    try {
-                        var before = if (media.kind == "video") edit.start else 0
-                        while (true) {
-                            val next = withContext(Dispatchers.IO) { source.next() } ?: break
-                            val after = next.second
-                            try {
-                                if (after > edit.start && before < edit.end) {
-                                    value =
-                                        withContext(Dispatchers.Default) {
-                                            Renderer.render(next.first, edit, false)
-                                        }
-                                    delay(
-                                        (minOf(after, edit.end) - maxOf(before, edit.start))
-                                            .coerceAtLeast(8)
-                                            .toLong()
-                                    )
+                    withContext(Dispatchers.IO) {
+                        val source = FrameSource.open(media, edit.start)
+                        val clock = android.os.SystemClock.elapsedRealtime()
+                        try {
+                            var before = if (media.kind == "video") edit.start else 0
+                            while (true) {
+                                val next = source.next() ?: break
+                                val after = next.second
+                                try {
+                                    if (after > edit.start && before < edit.end) {
+                                        value =
+                                            withContext(Dispatchers.Default) {
+                                                Renderer.render(next.first, edit, false)
+                                            }
+                                        delay(
+                                            (clock + minOf(after, edit.end) -
+                                                    edit.start -
+                                                    android.os.SystemClock.elapsedRealtime())
+                                                .coerceAtLeast(0)
+                                        )
+                                    }
+                                } finally {
+                                    next.first.recycle()
                                 }
-                            } finally {
-                                next.first.recycle()
+                                before = after
+                                if (after >= edit.end) break
                             }
-                            before = after
-                            if (after >= edit.end) break
+                        } finally {
+                            source.close()
                         }
-                    } finally {
-                        source.close()
                     }
-                    delay(8)
                 }
             } catch (c: kotlinx.coroutines.CancellationException) {
                 throw c

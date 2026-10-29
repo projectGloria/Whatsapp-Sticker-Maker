@@ -10,6 +10,8 @@ import java.util.UUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class ImportItem(val media: Incoming, val edit: Edit = Edit(), val reviewed: Boolean = false)
 
@@ -18,7 +20,19 @@ data class EditorTarget(
     val edit: Edit,
     val sticker: Sticker? = null,
     val pendingIndex: Int? = null,
-)
+) {
+    var persist: (() -> Unit)? = null
+    private var draftState by mutableStateOf(edit)
+    var draft: Edit
+        get() = draftState
+        set(value) {
+            draftState = value
+            persist?.invoke()
+        }
+
+    val undo = mutableStateListOf<Edit>()
+    val redo = mutableStateListOf<Edit>()
+}
 
 class StudioModel(app: Application) : AndroidViewModel(app) {
     val repo = Repository(app)
@@ -27,19 +41,70 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
             .observe()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     var selected by mutableStateOf<String?>(null)
-    var pending by mutableStateOf<List<ImportItem>>(emptyList())
+    private val sessions = app.getSharedPreferences("import_sessions", 0)
+    private var destinationState by mutableStateOf(sessions.getString("destination", null))
+    var destination: String?
+        get() = destinationState
+        set(value) { destinationState = value; sessions.edit().putString("destination", value).apply() }
+    private var pendingState by
+        mutableStateOf<List<ImportItem>>(SessionStore.restore(app, sessions))
+    var pending: List<ImportItem>
+        get() = pendingState
+        set(value) {
+            pendingState = value
+            SessionStore.save(sessions, value)
+        }
+
     var errors by mutableStateOf<List<String>>(emptyList())
     var message by mutableStateOf<String?>(null)
     var busy by mutableStateOf<String?>(null)
     var progress by mutableFloatStateOf(0f)
-    var editor by mutableStateOf<EditorTarget?>(null)
+    private var editorState by mutableStateOf<EditorTarget?>(null)
+    var editor: EditorTarget?
+        get() = editorState
+        set(value) {
+            editorState = value
+            value?.persist = { SessionStore.saveEditor(sessions, value) }
+            SessionStore.saveEditor(sessions, value)
+        }
+
     private var work: Job? = null
 
-    init { // Only abandoned, uncommitted imports live in this cache folder.
+    private suspend fun <T> mutate(block: suspend () -> T): T =
+        withContext(Dispatchers.IO) { mutationGate.withLock { block() } }
+
+    companion object {
+        private val mutationGate = Mutex()
+    }
+
+    init {
+        viewModelScope.launch {
+            val restored = mutate {
+                val contents = repo.dao.all()
+                contents.forEach { repo.cleanup(it.pack.id) }
+                val originals = contents.flatMap { it.stickers }.map { it.original }
+                val alreadySaved =
+                    pending.filter { item ->
+                        originals.any { it.endsWith("_" + item.media.file.name) }
+                    }
+                if (alreadySaved.isNotEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        pending = pending.filterNot { it in alreadySaved }
+                    }
+                    alreadySaved.forEach { it.media.file.delete() }
+                }
+                SessionStore.restoreEditor(repo, sessions)
+            }
+            if (editor == null && restored != null) editor = restored
+        }
+        // Only abandoned, uncommitted imports live in this legacy cache folder.
         viewModelScope.launch(Dispatchers.IO) {
             File(app.cacheDir, "imports")
                 .listFiles()
-                ?.filter { System.currentTimeMillis() - it.lastModified() > 24 * 60 * 60 * 1000L }
+                ?.filter { candidate ->
+                    pending.none { it.media.file == candidate } &&
+                        System.currentTimeMillis() - candidate.lastModified() > 24 * 60 * 60 * 1000L
+                }
                 ?.forEach { it.delete() }
         }
     }
@@ -47,7 +112,7 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
     fun action(block: suspend () -> Unit) {
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) { block() }
+                mutate { block() }
             } catch (c: CancellationException) {
                 throw c
             } catch (e: Exception) {
@@ -56,9 +121,9 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun create(name: String, animated: Boolean, onCreated: (Pack) -> Unit = {}) {
+    fun create(name: String, onCreated: (Pack) -> Unit = {}) {
         action {
-            val p = repo.create(name, animated)
+            val p = repo.create(name)
             withContext(Dispatchers.Main) { onCreated(p) }
         }
     }
@@ -78,11 +143,7 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                     for ((i, uri) in uris.withIndex()) {
                         ensureActive()
                         try {
-                            val media =
-                                withContext(Dispatchers.IO) {
-                                    MediaEngine.copyIncoming(getApplication(), uri)
-                                }
-                            collected += ImportItem(media)
+                            mutate { collected += ImportItem(MediaEngine.copyIncoming(getApplication(), uri)) }
                         } catch (c: CancellationException) {
                             throw c
                         } catch (e: Exception) {
@@ -99,13 +160,15 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun discard() {
-        pending.forEach { it.media.file.delete() }
+        val discarded = pending
         pending = emptyList()
+        discarded.forEach { it.media.file.delete() }
     }
 
     fun drop(index: Int) {
-        pending[index].media.file.delete()
+        val discarded = pending[index]
         pending = pending.filterIndexed { i, _ -> i != index }
+        discarded.media.file.delete()
     }
 
     fun openEditor(s: Sticker) {
@@ -140,19 +203,22 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                 val out = File(dir, asset)
                 var committed = false
                 try {
-                    withContext(Dispatchers.IO) {
+                    mutate {
                         val duration =
                             MediaEngine.convert(target.media, edit, out) { progress = it }
                         ensureActive()
                         repo.db.runInTransaction {
-                            check(repo.dao.sticker(sticker.id) != null) { "Sticker was removed" }
+                            val current =
+                                repo.dao.sticker(sticker.id) ?: error("Sticker was removed")
                             repo.dao.update(
-                                sticker.copy(asset = asset, edit = edit.json(), duration = duration)
+                                current.copy(asset = asset, edit = edit.json(), duration = duration)
                             )
                             val p = repo.dao.pack(sticker.packId)!!.pack
                             repo.dao.update(p.copy(version = p.version + 1))
+                            repo.normalizePublished(sticker.packId)
                         }
                         committed = true
+                        repo.cleanup(sticker.packId)
                         repo.notifyChange()
                     }
                     editor = null
@@ -183,15 +249,12 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                         val id = UUID.randomUUID().toString()
                         val dir = repo.folder(packId)
                         val out = File(dir, "$id.webp")
-                        val original = File(dir, "${id}_original.media")
+                        val original = File(dir, "${id}_original_${item.media.file.name}")
                         var committed = false
                         try {
-                            withContext(Dispatchers.IO) {
+                            mutate {
                                 val c =
                                     repo.dao.pack(packId) ?: error("Destination pack was deleted")
-                                require(c.pack.animated == item.media.animated) {
-                                    "This pack accepts ${if(c.pack.animated)"animated" else "static"} stickers only"
-                                }
                                 require(c.stickers.size < 30) { "Pack is full (30 stickers)" }
                                 require(
                                     !item.media.animated ||
@@ -205,7 +268,18 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                                         progress = (i + it) / batch.size
                                     }
                                 ensureActive()
-                                item.media.file.copyTo(original, true)
+                                item.media.file.inputStream().use { input ->
+                                    original.outputStream().use { output ->
+                                        val buffer = ByteArray(65536)
+                                        while (true) {
+                                            ensureActive()
+                                            val n = input.read(buffer)
+                                            if (n < 0) break
+                                            output.write(buffer, 0, n)
+                                        }
+                                    }
+                                }
+                                ensureActive()
                                 val tray =
                                     if (c.pack.tray.isEmpty()) "tray_${UUID.randomUUID()}.png"
                                     else c.pack.tray
@@ -217,6 +291,7 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                                         b.recycle()
                                     }
                                 }
+                                ensureActive()
                                 repo.db.runInTransaction {
                                     val current =
                                         repo.dao.pack(packId)
@@ -241,8 +316,10 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                                             tray = tray,
                                         )
                                     )
+                                    repo.normalizePublished(packId)
                                 }
                                 committed = true
+                                repo.cleanup(packId)
                                 completed += item.media.file
                                 repo.notifyChange()
                             }
@@ -254,6 +331,9 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                             if (!committed) {
                                 out.delete()
                                 original.delete()
+                                withContext(NonCancellable + Dispatchers.IO) {
+                                    mutationGate.withLock { repo.cleanup(packId) }
+                                }
                             }
                         }
                     }
@@ -261,8 +341,8 @@ class StudioModel(app: Application) : AndroidViewModel(app) {
                 } catch (c: CancellationException) {
                     message = "Import cancelled. ${completed.size} completed stickers kept."
                 } finally {
-                    completed.forEach { it.delete() }
                     pending = pending.filterNot { it.media.file in completed }
+                    completed.forEach { it.delete() }
                     errors = errors + failures
                     selected = packId
                     busy = null

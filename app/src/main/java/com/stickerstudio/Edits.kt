@@ -106,7 +106,12 @@ data class Edit(
 }
 
 object Renderer {
-    fun render(source: Bitmap, edit: Edit, still: Boolean = true): Bitmap {
+    fun render(
+        source: Bitmap,
+        edit: Edit,
+        still: Boolean = true,
+        checkpoint: () -> Unit = {},
+    ): Bitmap {
         val rotated =
             Bitmap.createBitmap(
                 source,
@@ -181,17 +186,39 @@ object Renderer {
         val out = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(out)
         if (edit.outline > 0) {
-            val alpha = clean.extractAlpha()
-            val white = Paint(3).apply { color = Color.WHITE }
-            for (radius in 1..edit.outline.toInt()) for (a in 0 until 24) {
-                val angle = a * PI / 12
-                canvas.drawBitmap(
-                    alpha,
-                    (cos(angle) * radius).toFloat(),
-                    (sin(angle) * radius).toFloat(),
-                    white,
-                )
+            val pixels = IntArray(512 * 512)
+            clean.getPixels(pixels, 0, 512, 0, 0, 512, 512)
+            val alphaValues = IntArray(pixels.size) { pixels[it] ushr 24 }
+            val radius = edit.outline.toInt().coerceIn(0, 20)
+            val dilated = IntArray(pixels.size)
+            val deque = IntArray(512)
+            for (dy in -radius..radius) {
+                checkpoint()
+                val reach = sqrt((radius * radius - dy * dy).toDouble()).toInt()
+                for (y in 0 until 512) {
+                    val sy = y + dy
+                    if (sy !in 0 until 512) continue
+                    var head = 0
+                    var tail = 0
+                    var next = 0
+                    for (x in 0 until 512) {
+                        while (next <= min(511, x + reach)) {
+                            while (
+                                tail > head &&
+                                    alphaValues[sy * 512 + deque[tail - 1]] <=
+                                        alphaValues[sy * 512 + next]
+                            ) tail--
+                            deque[tail++] = next++
+                        }
+                        while (tail > head && deque[head] < x - reach) head++
+                        val at = y * 512 + x
+                        dilated[at] = max(dilated[at], alphaValues[sy * 512 + deque[head]])
+                    }
+                }
             }
+            for (i in pixels.indices) pixels[i] = (dilated[i] shl 24) or 0x00ffffff
+            val alpha = Bitmap.createBitmap(pixels, 512, 512, Bitmap.Config.ARGB_8888)
+            canvas.drawBitmap(alpha, 0f, 0f, null)
             alpha.recycle()
         }
         canvas.drawBitmap(clean, 0f, 0f, null)

@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.stickerstudio.ReviewAuditTest" tests="8" failures="4" errors="0" skipped="0" time="8.702" timestamp="2026-10-29T18:38:59" hostname="localhost">
+  <properties>
+    <property name="device" value="Studio29(AVD) - 10" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="auditDefaultWebpPreviewDiffersFromSavedOutput" classname="com.stickerstudio.ReviewAuditTest" time="0.476" />
+  <testcase name="auditSuccessfulReplacementRetainsOldAsset" classname="com.stickerstudio.ReviewAuditTest" time="0.562" />
+  <testcase name="auditTrayReplacementRetainsOldTray" classname="com.stickerstudio.ReviewAuditTest" time="0.031" />
+  <testcase name="auditMixedPackVanishesAfterStillEdit" classname="com.stickerstudio.ReviewAuditTest" time="0.562" />
+  <testcase name="auditTrimWithinOneFrameIsRejected" classname="com.stickerstudio.ReviewAuditTest" time="0.037">
+    <failure>java.lang.AssertionError
+at org.junit.Assert.fail(Assert.java:87)
+at org.junit.Assert.assertTrue(Assert.java:42)
+at org.junit.Assert.assertNotNull(Assert.java:713)
+at org.junit.Assert.assertNotNull(Assert.java:723)
+at com.stickerstudio.ReviewAuditTest$auditTrimWithinOneFrameIsRejected$1.invokeSuspend(ReviewAuditTest.kt:119)
+at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:94)
+at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+at com.stickerstudio.ReviewAuditTest.auditTrimWithinOneFrameIsRejected(ReviewAuditTest.kt:113)
+</failure>
+  </testcase>
+  <testcase name="auditUnsavedTextDisappearsOnActivityRecreation" classname="com.stickerstudio.ReviewLifecycleAuditTest" time="1.523">
+    <failure>java.lang.AssertionError: Action performScrollTo() failed.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'Sticker text' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:82)
+at com.stickerstudio.ReviewLifecycleAuditTest.auditUnsavedTextDisappearsOnActivityRecreation(ReviewLifecycleAuditTest.kt:26)
+</failure>
+  </testcase>
+  <testcase name="mixedAndMalformedSharedFilesAreReportedIndividually" classname="com.stickerstudio.StudioUiTest" time="0.611">
+    <failure>java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'Static image' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists(SemanticsNodeInteraction.kt:125)
+at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists$default(SemanticsNodeInteraction.kt:124)
+at com.stickerstudio.StudioUiTest.mixedAndMalformedSharedFilesAreReportedIndividually(StudioUiTest.kt:88)
+</failure>
+  </testcase>
+  <testcase name="createShareEditAndReopenCollection" classname="com.stickerstudio.StudioUiTest" time="4.328">
+    <failure>java.lang.AssertionError: Action performScrollTo() failed.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'Sticker text' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:82)
+at com.stickerstudio.StudioUiTest.createShareEditAndReopenCollection(StudioUiTest.kt:72)
+</failure>
+  </testcase>
+</testsuite>

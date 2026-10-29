@@ -4,19 +4,27 @@ A native, offline Android 10+ app for making personal static and animated WhatsA
 
 ## Install
 
+### Nihil and catz test version
+
+Install `deliverables/Nihil-and-catz.apk` on an Android 10+ phone. The launcher name, home screen title and sticker publisher are **Nihil and catz**. This debug-signed test build uses app ID `com.stickerstudio.test` and version `1.0.3-test`, so it can be installed alongside the original Sticker Studio with its own separate sticker collection. It also updates the earlier Nihil and catz test build while keeping its collection. Build it with `./scripts/build.ps1`. The release app keeps its original name and app ID.
+
+Version 1.0.3 optimizes the native animation codec, reuses frame buffers, skips a small compression step for grossly oversized outputs, and decodes video at the requested retry frame rate. The difficult one-second GIF benchmark dropped from about 17.2 seconds to 1.8 seconds on the Android 10 emulator. Compatible WebP imports remain byte-preserved. See `docs/ANIMATION-IMPORT-FIX.md` for measurements and validation.
+
+### Original version
+
 Open `deliverables/Sticker-Studio.apk` on an Android phone and allow installation from the app used to open it. This is a debug-signed personal-install build. Keep the app installed so WhatsApp can read its sticker assets. There is no account, network permission, analytics, advertising or server.
 
 ## Use
 
-1. Create a static or animated pack in **My packs**.
+1. Create a pack in **My packs** by entering its name. No sticker-type choice is needed.
 2. Import actual PNG, JPEG, WebP, GIF or MP4 files with the system file picker, or share one or multiple files to Sticker Studio from another app.
-3. Review imports, open their editor if needed, and choose a matching destination pack. Mixed file types can be handled in batches: incompatible files stay in the preview list for a different pack. Errors are reported for each file.
+3. Review imports, open their editor if needed, and choose a destination pack. Photos, animated images and videos can be saved to the same pack in one batch. Errors are reported for each file.
 4. Still editor: crop edges, rotate, manually erase/restore, add and drag text, adjust a white outline, undo/redo and inspect light/dark transparency. Changing the crop or rotation resets brush strokes; Undo restores them.
 5. Animated editor: crop, rotate, choose start/end and preview the selected loop. Still-only brush/text controls are not offered for animation. Shorten a clip if it cannot fit the size limit after quality/frame-rate reduction.
 6. Tap a saved sticker to edit it again, move it earlier/later, remove it or use its first frame as the pack icon. Rename/delete packs from the pack screen.
 7. With 3–30 valid stickers and an icon, **Add to WhatsApp** becomes available. If both WhatsApp and WhatsApp Business are installed, select the destination. Up to ten packs can be exposed; hide a pack to make room for another. Hiding does not delete copies WhatsApp already cached.
 
-Draft packs may contain fewer than three stickers. Static and animated stickers are kept in separate packs. Originals and editing instructions are stored separately from generated assets in app-private storage; deleting the source download does not break the collection. Uninstalling this app deletes that collection. Backup/restore is deferred.
+Draft packs may contain fewer than three stickers. Packs accept both static and animated sources. WhatsApp requires uniform export formats: when a pack contains animation, still stickers are automatically wrapped as two identical animation frames without re-encoding the image, so they continue to look still. Original files and editing instructions are retained. Originals and editing instructions are stored separately from generated assets in app-private storage; deleting the source download does not break the collection. Uninstalling this app deletes that collection. Backup/restore is deferred.
 
 Sticker.ly is supported only when it supplies actual shared or saved media. Links, codes, private storage and proprietary pack archives are outside this version. There is no automatic background removal.
 
@@ -35,7 +43,7 @@ On Windows:
 
 The setup script installs project-local tools in `.tools/` and writes `local.properties`. Alternatively use an existing JDK 17/Android SDK and configure `JAVA_HOME` and `sdk.dir`. Open this folder in Android Studio, or run `gradlew.bat :app:assembleDebug` (`./gradlew` on Linux/macOS with an existing SDK). Internet access is needed for the first build; runtime processing is offline.
 
-Output: `app/build/outputs/apk/debug/app-debug.apk`. `scripts/build.ps1` copies it to `deliverables/Sticker-Studio.apk`. Source includes libwebp, so no native dependency download is needed during compilation. Tool downloads and build caches are excluded from the source handoff.
+Output: `app/build/outputs/apk/debug/app-debug.apk`. `scripts/build.ps1` copies the test build to `deliverables/Nihil-and-catz.apk`. Source includes libwebp, so no native dependency download is needed during compilation. Tool downloads and build caches are excluded from the source handoff.
 
 ## Format and security
 

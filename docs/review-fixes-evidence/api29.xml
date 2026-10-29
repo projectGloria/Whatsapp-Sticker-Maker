@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.stickerstudio.CreationPerformanceTest" tests="27" failures="0" errors="0" skipped="0" time="29.554" timestamp="2026-10-29T18:56:22" hostname="localhost">
+  <properties>
+    <property name="device" value="Studio29(AVD) - 10" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="profileActualAnimationConversion" classname="com.stickerstudio.CreationPerformanceTest" time="9.297" />
+  <testcase name="profileVideoStages" classname="com.stickerstudio.CreationPerformanceTest" time="1.064" />
+  <testcase name="profileCreationStages" classname="com.stickerstudio.CreationPerformanceTest" time="3.82" />
+  <testcase name="auditDefaultWebpPreviewDiffersFromSavedOutput" classname="com.stickerstudio.ReviewAuditTest" time="0.03" />
+  <testcase name="auditSuccessfulReplacementRetainsOldAsset" classname="com.stickerstudio.ReviewAuditTest" time="0.308" />
+  <testcase name="auditTrayReplacementRetainsOldTray" classname="com.stickerstudio.ReviewAuditTest" time="0.055" />
+  <testcase name="auditMixedPackVanishesAfterStillEdit" classname="com.stickerstudio.ReviewAuditTest" time="0.105" />
+  <testcase name="pendingSessionRestoresMediaAndAcceptedEdits" classname="com.stickerstudio.ReviewAuditTest" time="0.029" />
+  <testcase name="auditUnsavedTextDisappearsOnActivityRecreation" classname="com.stickerstudio.ReviewLifecycleAuditTest" time="3.358" />
+  <testcase name="databasePersistenceVersioningReorderAndProviderWhitelist" classname="com.stickerstudio.StudioInstrumentedTest" time="0.131" />
+  <testcase name="failedReplacementKeepsSavedStickerAndMetadata" classname="com.stickerstudio.StudioInstrumentedTest" time="0.053" />
+  <testcase name="tenPackExposureLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="0.232" />
+  <testcase name="stillEditingTransparencyAndEditRoundTrip" classname="com.stickerstudio.StudioInstrumentedTest" time="0.081" />
+  <testcase name="complexAnimationRetriesCompressionToMeetSizeLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="1.871" />
+  <testcase name="animatedWebpTrimAndVideoRotation" classname="com.stickerstudio.StudioInstrumentedTest" time="0.665" />
+  <testcase name="unreadableShareIsReported" classname="com.stickerstudio.StudioInstrumentedTest" time="0.002" />
+  <testcase name="cancellationStopsFrameProcessingAndKeepsExistingAsset" classname="com.stickerstudio.StudioInstrumentedTest" time="0.028" />
+  <testcase name="gifDisposalAndAnimatedTiming" classname="com.stickerstudio.StudioInstrumentedTest" time="0.002" />
+  <testcase name="lowerRateVideoRetrievesOnlyRequiredFrames" classname="com.stickerstudio.StudioInstrumentedTest" time="0.281" />
+  <testcase name="mixedPackImportsAndExportsWithoutChoosingAType" classname="com.stickerstudio.StudioInstrumentedTest" time="0.104" />
+  <testcase name="compatibleStaticAndAnimatedWebpAreBytePreserved" classname="com.stickerstudio.StudioInstrumentedTest" time="0.002" />
+  <testcase name="malformedAndUnsupportedMediaAreRejected" classname="com.stickerstudio.StudioInstrumentedTest" time="0.0" />
+  <testcase name="nativeEncoderPreservesPartialAlphaAndTransparentPixels" classname="com.stickerstudio.StudioInstrumentedTest" time="0.029" />
+  <testcase name="cropAndRotationChangeComposition" classname="com.stickerstudio.StudioInstrumentedTest" time="0.029" />
+  <testcase name="fullPackAndMixedImportFailuresKeepUnimportedFiles" classname="com.stickerstudio.StudioInstrumentedTest" time="0.483" />
+  <testcase name="mixedAndMalformedSharedFilesAreReportedIndividually" classname="com.stickerstudio.StudioUiTest" time="2.465" />
+  <testcase name="createShareEditAndReopenCollection" classname="com.stickerstudio.StudioUiTest" time="4.423" />
+</testsuite>

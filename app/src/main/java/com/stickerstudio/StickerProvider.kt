@@ -15,8 +15,14 @@ class StickerProvider : ContentProvider() {
 
     override fun onCreate() = true
 
-    private fun exposed() =
-        repo.dao.all().filter { it.pack.exposed && repo.issues(it).isEmpty() }.take(10)
+    private fun exposed(id: String? = null) =
+        (if (id == null) repo.dao.exposedPacks() else listOfNotNull(repo.dao.pack(id)))
+            .filter {
+                it.pack.exposed &&
+                    repo.issues(it).isEmpty() &&
+                    it.stickers.all { s -> (s.duration > 0) == it.pack.animated }
+            }
+            .take(10)
 
     override fun query(
         uri: Uri,
@@ -26,7 +32,7 @@ class StickerProvider : ContentProvider() {
         sortOrder: String?,
     ): Cursor {
         val p = uri.pathSegments
-        require(uri.authority == "com.stickerstudio.stickers")
+        require(uri.authority == "${BuildConfig.APPLICATION_ID}.stickers")
         val cursor =
             when {
                 p.size in 1..2 && p[0] == "metadata" ->
@@ -48,7 +54,7 @@ class StickerProvider : ContentProvider() {
                             )
                         )
                         .apply {
-                            exposed()
+                            exposed(p.getOrNull(1))
                                 .filter { p.size == 1 || it.pack.id == p[1] }
                                 .forEach { c ->
                                     val pack = c.pack
@@ -56,7 +62,7 @@ class StickerProvider : ContentProvider() {
                                         arrayOf<Any>(
                                             pack.id,
                                             pack.name,
-                                            "Sticker Studio",
+                                            requireNotNull(context).getString(R.string.app_name),
                                             pack.tray,
                                             "",
                                             "",
@@ -80,7 +86,7 @@ class StickerProvider : ContentProvider() {
                             )
                         )
                         .apply {
-                            exposed()
+                            exposed(p[1])
                                 .firstOrNull { it.pack.id == p[1] }
                                 ?.stickers
                                 ?.forEach { addRow(arrayOf(it.asset, "😀", "")) }
@@ -95,11 +101,11 @@ class StickerProvider : ContentProvider() {
         val p = uri.pathSegments
         return when {
             p.size == 1 && p[0] == "metadata" ->
-                "vnd.android.cursor.dir/vnd.com.stickerstudio.stickers.metadata"
+                "vnd.android.cursor.dir/vnd.${BuildConfig.APPLICATION_ID}.stickers.metadata"
             p.size == 2 && p[0] == "metadata" ->
-                "vnd.android.cursor.item/vnd.com.stickerstudio.stickers.metadata"
+                "vnd.android.cursor.item/vnd.${BuildConfig.APPLICATION_ID}.stickers.metadata"
             p.size == 2 && p[0] == "stickers" ->
-                "vnd.android.cursor.dir/vnd.com.stickerstudio.stickers.stickers"
+                "vnd.android.cursor.dir/vnd.${BuildConfig.APPLICATION_ID}.stickers.stickers"
             p.size == 3 && p[0] == "stickers_asset" ->
                 if (p[2].endsWith(".png")) "image/png" else "image/webp"
             else -> throw IllegalArgumentException("Unknown provider URI")
@@ -110,10 +116,12 @@ class StickerProvider : ContentProvider() {
         if (mode != "r") throw SecurityException("Sticker assets are read-only")
         val p = uri.pathSegments
         if (
-            uri.authority != "com.stickerstudio.stickers" || p.size != 3 || p[0] != "stickers_asset"
+            uri.authority != "${BuildConfig.APPLICATION_ID}.stickers" ||
+                p.size != 3 ||
+                p[0] != "stickers_asset"
         )
             throw FileNotFoundException()
-        val c = exposed().firstOrNull { it.pack.id == p[1] } ?: throw FileNotFoundException()
+        val c = exposed(p[1]).firstOrNull { it.pack.id == p[1] } ?: throw FileNotFoundException()
         if (p[2] != c.pack.tray && c.stickers.none { it.asset == p[2] })
             throw FileNotFoundException()
         val parent = repo.folder(c.pack.id).canonicalFile

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.stickerstudio.AnimationEncodingTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-29T18:55:39" hostname="DESKTOP-LCDTOT2" time="0.026">
+  <properties/>
+  <testcase name="adaptiveRetriesKeepTheLastFallback" classname="com.stickerstudio.AnimationEncodingTest" time="0.02"/>
+  <testcase name="variableDelayFramesAreNotDuplicated" classname="com.stickerstudio.AnimationEncodingTest" time="0.001"/>
+  <testcase name="absoluteSamplingDoesNotCollapseFifteenFpsToTen" classname="com.stickerstudio.AnimationEncodingTest" time="0.004"/>
+  <testcase name="roundingDoesNotLoseVideoFrames" classname="com.stickerstudio.AnimationEncodingTest" time="0.001"/>
+  <testcase name="trimmedSamplingStartsInsideTheFrameCoveringTheTrim" classname="com.stickerstudio.AnimationEncodingTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

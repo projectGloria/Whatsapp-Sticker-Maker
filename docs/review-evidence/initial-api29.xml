@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.stickerstudio.CreationPerformanceTest" tests="26" failures="3" errors="0" skipped="0" time="35.638" timestamp="2026-10-29T18:38:10" hostname="localhost">
+  <properties>
+    <property name="device" value="Studio29(AVD) - 10" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="profileActualAnimationConversion" classname="com.stickerstudio.CreationPerformanceTest" time="8.71" />
+  <testcase name="profileVideoStages" classname="com.stickerstudio.CreationPerformanceTest" time="0.979" />
+  <testcase name="profileCreationStages" classname="com.stickerstudio.CreationPerformanceTest" time="13.666" />
+  <testcase name="auditDefaultWebpPreviewDiffersFromSavedOutput" classname="com.stickerstudio.ReviewAuditTest" time="0.483" />
+  <testcase name="auditSuccessfulReplacementRetainsOldAsset" classname="com.stickerstudio.ReviewAuditTest" time="0.584" />
+  <testcase name="auditTrayReplacementRetainsOldTray" classname="com.stickerstudio.ReviewAuditTest" time="0.03" />
+  <testcase name="auditMixedPackVanishesAfterStillEdit" classname="com.stickerstudio.ReviewAuditTest" time="0.509" />
+  <testcase name="auditSingleVisualFrameAnimationCannotBeEdited" classname="com.stickerstudio.ReviewAuditTest" time="0.064">
+    <failure>java.lang.AssertionError
+at org.junit.Assert.fail(Assert.java:87)
+at org.junit.Assert.assertTrue(Assert.java:42)
+at org.junit.Assert.assertNotNull(Assert.java:713)
+at org.junit.Assert.assertNotNull(Assert.java:723)
+at com.stickerstudio.ReviewAuditTest$auditSingleVisualFrameAnimationCannotBeEdited$1.invokeSuspend(ReviewAuditTest.kt:119)
+at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:94)
+at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+at com.stickerstudio.ReviewAuditTest.auditSingleVisualFrameAnimationCannotBeEdited(ReviewAuditTest.kt:113)
+</failure>
+  </testcase>
+  <testcase name="databasePersistenceVersioningReorderAndProviderWhitelist" classname="com.stickerstudio.StudioInstrumentedTest" time="0.054" />
+  <testcase name="failedReplacementKeepsSavedStickerAndMetadata" classname="com.stickerstudio.StudioInstrumentedTest" time="0.054" />
+  <testcase name="tenPackExposureLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="0.205" />
+  <testcase name="stillEditingTransparencyAndEditRoundTrip" classname="com.stickerstudio.StudioInstrumentedTest" time="0.508" />
+  <testcase name="complexAnimationRetriesCompressionToMeetSizeLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="1.894" />
+  <testcase name="animatedWebpTrimAndVideoRotation" classname="com.stickerstudio.StudioInstrumentedTest" time="0.584" />
+  <testcase name="unreadableShareIsReported" classname="com.stickerstudio.StudioInstrumentedTest" time="0.002" />
+  <testcase name="cancellationStopsFrameProcessingAndKeepsExistingAsset" classname="com.stickerstudio.StudioInstrumentedTest" time="0.005" />
+  <testcase name="gifDisposalAndAnimatedTiming" classname="com.stickerstudio.StudioInstrumentedTest" time="0.055" />
+  <testcase name="lowerRateVideoRetrievesOnlyRequiredFrames" classname="com.stickerstudio.StudioInstrumentedTest" time="0.204" />
+  <testcase name="mixedPackImportsAndExportsWithoutChoosingAType" classname="com.stickerstudio.StudioInstrumentedTest" time="0.055" />
+  <testcase name="compatibleStaticAndAnimatedWebpAreBytePreserved" classname="com.stickerstudio.StudioInstrumentedTest" time="0.003" />
+  <testcase name="malformedAndUnsupportedMediaAreRejected" classname="com.stickerstudio.StudioInstrumentedTest" time="0.002" />
+  <testcase name="nativeEncoderPreservesPartialAlphaAndTransparentPixels" classname="com.stickerstudio.StudioInstrumentedTest" time="0.031" />
+  <testcase name="cropAndRotationChangeComposition" classname="com.stickerstudio.StudioInstrumentedTest" time="0.002" />
+  <testcase name="fullPackAndMixedImportFailuresKeepUnimportedFiles" classname="com.stickerstudio.StudioInstrumentedTest" time="0.307" />
+  <testcase name="mixedAndMalformedSharedFilesAreReportedIndividually" classname="com.stickerstudio.StudioUiTest" time="1.345">
+    <failure>java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'Static image' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists(SemanticsNodeInteraction.kt:125)
+at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists$default(SemanticsNodeInteraction.kt:124)
+at com.stickerstudio.StudioUiTest.mixedAndMalformedSharedFilesAreReportedIndividually(StudioUiTest.kt:88)
+</failure>
+  </testcase>
+  <testcase name="createShareEditAndReopenCollection" classname="com.stickerstudio.StudioUiTest" time="4.555">
+    <failure>java.lang.AssertionError: Action performScrollTo() failed.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (Text + InputText + EditableText contains 'Sticker text' (ignoreCase: false))
+
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+at androidx.compose.ui.test.SemanticsNodeInteraction.fetchSemanticsNode(SemanticsNodeInteraction.kt:84)
+at androidx.compose.ui.test.ActionsKt.performScrollTo(Actions.kt:82)
+at com.stickerstudio.StudioUiTest.createShareEditAndReopenCollection(StudioUiTest.kt:72)
+</failure>
+  </testcase>
+</testsuite>

@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.stickerstudio.CreationPerformanceTest" tests="21" failures="0" errors="0" skipped="0" time="34.771" timestamp="2026-10-29T16:37:12" hostname="localhost">
+  <properties>
+    <property name="device" value="Studio29(AVD) - 10" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="profileActualAnimationConversion" classname="com.stickerstudio.CreationPerformanceTest" time="9.023" />
+  <testcase name="profileVideoStages" classname="com.stickerstudio.CreationPerformanceTest" time="1.074" />
+  <testcase name="profileCreationStages" classname="com.stickerstudio.CreationPerformanceTest" time="13.204" />
+  <testcase name="databasePersistenceVersioningReorderAndProviderWhitelist" classname="com.stickerstudio.StudioInstrumentedTest" time="0.105" />
+  <testcase name="failedReplacementKeepsSavedStickerAndMetadata" classname="com.stickerstudio.StudioInstrumentedTest" time="0.082" />
+  <testcase name="tenPackExposureLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="0.207" />
+  <testcase name="stillEditingTransparencyAndEditRoundTrip" classname="com.stickerstudio.StudioInstrumentedTest" time="0.486" />
+  <testcase name="complexAnimationRetriesCompressionToMeetSizeLimit" classname="com.stickerstudio.StudioInstrumentedTest" time="1.772" />
+  <testcase name="animatedWebpTrimAndVideoRotation" classname="com.stickerstudio.StudioInstrumentedTest" time="0.593" />
+  <testcase name="unreadableShareIsReported" classname="com.stickerstudio.StudioInstrumentedTest" time="0.003" />
+  <testcase name="cancellationStopsFrameProcessingAndKeepsExistingAsset" classname="com.stickerstudio.StudioInstrumentedTest" time="0.029" />
+  <testcase name="gifDisposalAndAnimatedTiming" classname="com.stickerstudio.StudioInstrumentedTest" time="0.03" />
+  <testcase name="lowerRateVideoRetrievesOnlyRequiredFrames" classname="com.stickerstudio.StudioInstrumentedTest" time="0.233" />
+  <testcase name="mixedPackImportsAndExportsWithoutChoosingAType" classname="com.stickerstudio.StudioInstrumentedTest" time="0.078" />
+  <testcase name="compatibleStaticAndAnimatedWebpAreBytePreserved" classname="com.stickerstudio.StudioInstrumentedTest" time="0.004" />
+  <testcase name="malformedAndUnsupportedMediaAreRejected" classname="com.stickerstudio.StudioInstrumentedTest" time="0.005" />
+  <testcase name="nativeEncoderPreservesPartialAlphaAndTransparentPixels" classname="com.stickerstudio.StudioInstrumentedTest" time="0.004" />
+  <testcase name="cropAndRotationChangeComposition" classname="com.stickerstudio.StudioInstrumentedTest" time="0.005" />
+  <testcase name="fullPackAndMixedImportFailuresKeepUnimportedFiles" classname="com.stickerstudio.StudioInstrumentedTest" time="0.311" />
+  <testcase name="mixedAndMalformedSharedFilesAreReportedIndividually" classname="com.stickerstudio.StudioUiTest" time="2.226" />
+  <testcase name="createShareEditAndReopenCollection" classname="com.stickerstudio.StudioUiTest" time="4.676" />
+</testsuite>

@@ -1,0 +1,93 @@
+--------- beginning of main
+--------- beginning of system
+--------- beginning of crash
+10-29 19:25:36.600  4839  4860 I StickerPerf: render outline=0.0 medianMs=3.096437
+10-29 19:25:39.172  4839  4860 I StickerPerf: render outline=8.0 medianMs=423.334446
+10-29 19:25:46.552  4839  4860 I StickerPerf: render outline=24.0 medianMs=1217.926881
+10-29 19:25:46.975  4839  4860 I StickerPerf: stillEncode quality=100 ms=5.329542 bytes=29498
+10-29 19:25:46.994  4839  4860 I StickerPerf: stillEncode quality=90 ms=18.505698 bytes=6612
+10-29 19:25:47.008  4839  4860 I StickerPerf: stillEncode quality=80 ms=14.149653 bytes=5878
+10-29 19:25:47.013  4839  4860 I StickerPerf: convert file=static.webp ms=2.471633
+10-29 19:25:47.018  4839  4860 I StickerPerf: convert file=compatible.webp ms=3.566536
+10-29 19:25:47.469  4839  4860 I StickerPerf: convert file=source.png ms=450.814174
+10-29 19:25:49.646  4839  4860 I StickerPerf: convert file=rotated.mp4 ms=2148.570442
+10-29 19:25:57.386  4839  4860 I StickerPerf: animation q=85.0 fps=20 decoded=20 encoded=20 decodeMs=29.237587 renderMs=24.772612 addMs=7663.242509 finishMs=1.693813 totalMs=7728.900294 bytes=2669118
+10-29 19:26:00.986  4839  4860 I StickerPerf: animation q=65.0 fps=15 decoded=20 encoded=10 decodeMs=19.904783 renderMs=11.172391 addMs=3562.002007 finishMs=1.057837 totalMs=3599.81179 bytes=954908
+10-29 19:26:04.517  4839  4860 I StickerPerf: animation q=45.0 fps=12 decoded=20 encoded=10 decodeMs=18.859476 renderMs=12.448493 addMs=3493.565876 finishMs=0.528244 totalMs=3531.464524 bytes=784790
+10-29 19:26:06.855  4839  4860 I StickerPerf: animation q=30.0 fps=8 decoded=20 encoded=7 decodeMs=18.972656 renderMs=7.975433 addMs=2305.952685 finishMs=0.259736 totalMs=2337.135927 bytes=453122
+10-29 19:26:47.353  5445  5466 I StickerPerf: video frames=16 decodeMs=833.727693 renderMs=50.899136 addMs=1258.389133 bytes=56166
+10-29 19:27:21.339  6049  6070 I StickerPerf: video frames=16 decodeMs=809.939215 renderMs=47.849141 addMs=1208.040939 bytes=56166
+10-29 19:27:21.376  6049  6070 I StickerPerf: render outline=0.0 medianMs=1.346835
+10-29 19:27:23.952  6049  6070 I StickerPerf: render outline=8.0 medianMs=429.04726
+10-29 19:27:30.135  6049  6070 I StickerPerf: render outline=20.0 medianMs=1030.53672
+10-29 19:27:30.563  6049  6070 I StickerPerf: stillEncode quality=100 ms=5.182447 bytes=29498
+10-29 19:27:30.576  6049  6070 I StickerPerf: stillEncode quality=90 ms=12.970898 bytes=6612
+10-29 19:27:30.589  6049  6070 I StickerPerf: stillEncode quality=80 ms=12.373733 bytes=5878
+10-29 19:27:30.592  6049  6070 I StickerPerf: convert file=static.webp ms=2.389041
+10-29 19:27:30.596  6049  6070 I StickerPerf: convert file=compatible.webp ms=3.267321
+10-29 19:27:31.037  6049  6070 I StickerPerf: convert file=source.png ms=441.241085
+10-29 19:27:33.206  6049  6070 I StickerPerf: convert file=rotated.mp4 ms=2161.57446
+10-29 19:27:41.046  6049  6070 I StickerPerf: animation q=85.0 fps=20 decoded=20 encoded=20 decodeMs=31.95744 renderMs=23.689768 addMs=7757.247986 finishMs=1.587287 totalMs=7826.356648 bytes=2669118
+10-29 19:27:44.622  6049  6070 I StickerPerf: animation q=65.0 fps=15 decoded=20 encoded=10 decodeMs=20.265314 renderMs=10.172071 addMs=3540.138248 finishMs=0.779972 totalMs=3576.201348 bytes=954908
+10-29 19:27:48.086  6049  6070 I StickerPerf: animation q=45.0 fps=12 decoded=20 encoded=10 decodeMs=18.912353 renderMs=12.818847 addMs=3426.061617 finishMs=0.500568 totalMs=3463.649409 bytes=784790
+10-29 19:27:50.427  6049  6070 I StickerPerf: animation q=30.0 fps=8 decoded=20 encoded=7 decodeMs=18.524788 renderMs=7.903546 addMs=2310.090282 finishMs=0.288111 totalMs=2340.505321 bytes=453122
+10-29 19:34:54.523  7297  7318 I StickerPerf: actual file=noisy.gif iteration=0 ms=1581.940087 bytes=248808 duration=1000
+10-29 19:34:56.116  7297  7318 I StickerPerf: actual file=noisy.gif iteration=1 ms=1593.493291 bytes=248808 duration=1000
+10-29 19:34:57.732  7297  7318 I StickerPerf: actual file=noisy.gif iteration=2 ms=1615.682152 bytes=248808 duration=1000
+10-29 19:34:57.747  7297  7318 I StickerPerf: actual file=disposal.gif iteration=0 ms=13.817751 bytes=812 duration=400
+10-29 19:34:57.761  7297  7318 I StickerPerf: actual file=disposal.gif iteration=1 ms=13.457588 bytes=812 duration=400
+10-29 19:34:57.786  7297  7318 I StickerPerf: actual file=disposal.gif iteration=2 ms=25.105996 bytes=812 duration=400
+10-29 19:34:57.800  7297  7318 I StickerPerf: actual file=animated.webp iteration=0 ms=13.083604 bytes=812 duration=400
+10-29 19:34:57.815  7297  7318 I StickerPerf: actual file=animated.webp iteration=1 ms=14.419003 bytes=812 duration=400
+10-29 19:34:57.837  7297  7318 I StickerPerf: actual file=animated.webp iteration=2 ms=22.287178 bytes=812 duration=400
+10-29 19:34:57.841  7297  7318 I StickerPerf: actual file=compatible.webp iteration=0 ms=3.095487 bytes=2846 duration=400
+10-29 19:34:57.844  7297  7318 I StickerPerf: actual file=compatible.webp iteration=1 ms=2.45508 bytes=2846 duration=400
+10-29 19:34:57.847  7297  7318 I StickerPerf: actual file=compatible.webp iteration=2 ms=2.781535 bytes=2846 duration=400
+10-29 19:34:58.867  7297  7318 I StickerPerf: actual file=rotated.mp4 iteration=0 ms=1014.499517 bytes=56470 duration=800
+10-29 19:35:00.027  7297  7318 I StickerPerf: actual file=rotated.mp4 iteration=1 ms=1160.258602 bytes=56470 duration=800
+10-29 19:35:01.042  7297  7318 I StickerPerf: actual file=rotated.mp4 iteration=2 ms=1014.924081 bytes=56470 duration=800
+10-29 19:35:02.218  7297  7318 I StickerPerf: video frames=16 decodeMs=985.434793 renderMs=77.086608 addMs=95.030548 bytes=56470
+10-29 19:35:02.256  7297  7318 I StickerPerf: render outline=0.0 medianMs=2.295232
+10-29 19:35:04.929  7297  7318 I StickerPerf: render outline=8.0 medianMs=436.791036
+10-29 19:35:11.233  7297  7318 I StickerPerf: render outline=20.0 medianMs=1046.730107
+10-29 19:35:11.661  7297  7318 I StickerPerf: stillEncode quality=100 ms=5.633954 bytes=29498
+10-29 19:35:11.674  7297  7318 I StickerPerf: stillEncode quality=90 ms=13.261496 bytes=6612
+10-29 19:35:11.687  7297  7318 I StickerPerf: stillEncode quality=80 ms=12.594699 bytes=5878
+10-29 19:35:11.690  7297  7318 I StickerPerf: convert file=static.webp ms=2.03339
+10-29 19:35:11.695  7297  7318 I StickerPerf: convert file=compatible.webp ms=4.066074
+10-29 19:35:12.144  7297  7318 I StickerPerf: convert file=source.png ms=448.404978
+10-29 19:35:13.194  7297  7318 I StickerPerf: convert file=rotated.mp4 ms=1042.28482
+10-29 19:35:13.947  7297  7318 I StickerPerf: animation q=85.0 fps=20 decoded=20 encoded=20 decodeMs=20.312835 renderMs=21.952578 addMs=696.260999 finishMs=1.60659 totalMs=748.918619 bytes=2669118
+10-29 19:35:14.285  7297  7318 I StickerPerf: animation q=65.0 fps=15 decoded=20 encoded=10 decodeMs=19.003168 renderMs=10.648087 addMs=303.671446 finishMs=0.537418 totalMs=338.051781 bytes=954908
+10-29 19:35:14.606  7297  7318 I StickerPerf: animation q=45.0 fps=12 decoded=20 encoded=10 decodeMs=17.907102 renderMs=10.694463 addMs=287.396724 finishMs=0.477486 totalMs=320.749615 bytes=784790
+10-29 19:35:14.839  7297  7318 I StickerPerf: animation q=30.0 fps=8 decoded=20 encoded=7 decodeMs=19.426137 renderMs=7.648875 addMs=201.999366 finishMs=0.255299 totalMs=232.881446 bytes=453122
+10-29 19:36:39.468 10873 10894 I StickerPerf: actual file=noisy.gif iteration=0 ms=1776.180405 bytes=449370 duration=1000 frames=8
+10-29 19:36:41.221 10873 10894 I StickerPerf: actual file=noisy.gif iteration=1 ms=1721.167591 bytes=449370 duration=1000 frames=8
+10-29 19:36:43.041 10873 10894 I StickerPerf: actual file=noisy.gif iteration=2 ms=1787.850066 bytes=449370 duration=1000 frames=8
+10-29 19:36:43.061 10873 10894 I StickerPerf: actual file=disposal.gif iteration=0 ms=15.48198 bytes=812 duration=400 frames=3
+10-29 19:36:43.080 10873 10894 I StickerPerf: actual file=disposal.gif iteration=1 ms=15.81257 bytes=812 duration=400 frames=3
+10-29 19:36:43.099 10873 10894 I StickerPerf: actual file=disposal.gif iteration=2 ms=16.419467 bytes=812 duration=400 frames=3
+10-29 19:36:43.133 10873 10894 I StickerPerf: actual file=animated.webp iteration=0 ms=30.718087 bytes=812 duration=400 frames=3
+10-29 19:36:43.154 10873 10894 I StickerPerf: actual file=animated.webp iteration=1 ms=17.936091 bytes=812 duration=400 frames=3
+10-29 19:36:43.172 10873 10894 I StickerPerf: actual file=animated.webp iteration=2 ms=14.988092 bytes=812 duration=400 frames=3
+10-29 19:36:43.180 10873 10894 I StickerPerf: actual file=compatible.webp iteration=0 ms=3.662799 bytes=2846 duration=400 frames=3
+10-29 19:36:43.186 10873 10894 I StickerPerf: actual file=compatible.webp iteration=1 ms=3.75224 bytes=2846 duration=400 frames=3
+10-29 19:36:43.191 10873 10894 I StickerPerf: actual file=compatible.webp iteration=2 ms=2.772963 bytes=2846 duration=400 frames=3
+10-29 19:36:44.371 10873 10894 I StickerPerf: actual file=rotated.mp4 iteration=0 ms=1156.558594 bytes=56470 duration=800 frames=16
+10-29 19:36:45.550 10873 10894 I StickerPerf: actual file=rotated.mp4 iteration=1 ms=1161.365436 bytes=56470 duration=800 frames=16
+10-29 19:36:46.668 10873 10894 I StickerPerf: actual file=rotated.mp4 iteration=2 ms=1100.802922 bytes=56470 duration=800 frames=16
+10-29 19:36:47.768 10873 10894 I StickerPerf: video frames=16 decodeMs=907.125252 renderMs=78.350031 addMs=96.515595 bytes=56470
+10-29 19:36:47.802 10873 10894 I StickerPerf: render outline=0.0 medianMs=1.625431
+10-29 19:36:50.684 10873 10894 I StickerPerf: render outline=8.0 medianMs=480.252139
+10-29 19:36:57.341 10873 10894 I StickerPerf: render outline=20.0 medianMs=1105.297919
+10-29 19:36:57.804 10873 10894 I StickerPerf: stillEncode quality=100 ms=5.297106 bytes=29498
+10-29 19:36:57.818 10873 10894 I StickerPerf: stillEncode quality=90 ms=13.660335 bytes=6612
+10-29 19:36:57.832 10873 10894 I StickerPerf: stillEncode quality=80 ms=14.276708 bytes=5878
+10-29 19:36:57.835 10873 10894 I StickerPerf: convert file=static.webp ms=1.699881
+10-29 19:36:57.838 10873 10894 I StickerPerf: convert file=compatible.webp ms=2.999715
+10-29 19:36:58.306 10873 10894 I StickerPerf: convert file=source.png ms=467.339966
+10-29 19:36:59.262 10873 10894 I StickerPerf: convert file=rotated.mp4 ms=948.957584
+10-29 19:37:00.056 10873 10894 I StickerPerf: animation q=85.0 fps=20 decoded=20 encoded=20 decodeMs=21.115301 renderMs=24.359841 addMs=731.597692 finishMs=2.050288 totalMs=789.099033 bytes=2669118
+10-29 19:37:00.406 10873 10894 I StickerPerf: animation q=65.0 fps=15 decoded=20 encoded=10 decodeMs=19.640805 renderMs=10.256314 addMs=315.774938 finishMs=0.584167 totalMs=350.312542 bytes=954908
+10-29 19:37:00.743 10873 10894 I StickerPerf: animation q=45.0 fps=12 decoded=20 encoded=10 decodeMs=19.518038 renderMs=10.285986 addMs=301.879946 finishMs=0.534521 totalMs=336.777973 bytes=784790
+10-29 19:37:00.975 10873 10894 I StickerPerf: animation q=30.0 fps=8 decoded=20 encoded=7 decodeMs=19.052814 renderMs=8.4995 addMs=200.027437 finishMs=0.278577 totalMs=231.389937 bytes=453122
